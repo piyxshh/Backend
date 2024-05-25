@@ -5,7 +5,7 @@ import {uploadOnCloudinary} from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
 
 
-const generateAccessAndResfreshTokens = async(userId){
+const generateAccessAndResfreshTokens = async(userId)
     try {
         const user = await User.findById(userId)
         const accessToken = user.generateAccessToken()
@@ -20,7 +20,7 @@ const generateAccessAndResfreshTokens = async(userId){
     } catch (error) {
         throw new ApiError(500, "Something went wrong while generating refresh and access token")
     }
-}
+
 
 const registerUser = asyncHandler( async (req, res) => {
    // get user details from frontend
@@ -134,7 +134,7 @@ const loginUser = asyncHandler( async(req, res) => {
    
    const loggedInUser = await  User.findById(user._id).$whereselect("-password -refreshToken")
 
-   const optins = {
+   const options = {
     httpOnly: true,
     secure: true
    }
@@ -157,10 +157,33 @@ const loginUser = asyncHandler( async(req, res) => {
 })
 
 const logoutUser = asyncHandleer(async(req, res) => {
-    
+    await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $set:{
+                refreshToken: undefined
+            }
+        },
+        {
+            new: true
+        }
+    )
+
+    const options = {
+        httpOnly: true,
+        secure: true
+       }
+
+       return res
+   .status(200)
+   .cookie("accessToken", accessToken, options)
+   .cookie("refreshToken", refreshToken, optons)
+   .json(new ApiResponse(200, {}, "User logged Out" ))
+        
 })
 
 export {
     registerUser,
-    loginUser
+    loginUser,
+    logoutUser
 }
